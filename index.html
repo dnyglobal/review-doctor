@@ -26,7 +26,7 @@
     .result-content { font-size: 14px; line-height: 1.7; white-space: pre-wrap; color: #334155; }
     .copy-btn { position: absolute; top: 14px; right: 14px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-weight: 600; }
     .copy-btn:hover { background: #f8fafc; }
-    .loading { display: none; text-align: center; font-weight: 600; color: #2563eb; margin: 20px 0; }
+    .loading { display: none; text-align: center; font-weight: 700; color: #2563eb; margin: 20px 0; font-size: 15px; }
   </style>
 </head>
 <body>
@@ -46,7 +46,7 @@
     <button class="btn-danger" id="complaintBtn" onclick="requestAI('complaint')">플랫폼 법적 게시중단 신청서 작성</button>
   </div>
 
-  <div class="loading" id="loadingSpinner">리뷰닥터가 악성 리뷰를 분석하고 솔루션을 처방 중입니다...</div>
+  <div class="loading" id="loadingSpinner">⏳ AI 엔진이 분석 중입니다. 약 2~3초 소요됩니다...</div>
 
   <div class="result-box" id="resultContainer">
     <div class="result-title" id="resultHeader">처방 결과</div>
@@ -91,74 +91,9 @@ async function requestAI(mode) {
     });
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "서버 통신 오류");
-
-    if (mode === 'reply') {
-      resultBox.className = "result-box";
-      resultHeader.innerText = "■ 리뷰닥터 처방: 사장님 공관 답변 (상황 맞춤형 2종)";
-    } else {
-      resultBox.className = "result-box danger-box";
-      resultHeader.innerText = "■ 리뷰닥터 법적 조치: 배민/쿠팡이츠/네이버 제출용 [게시중단(블라인드) 요청서]";
-    }
-
-    resultText.innerText = data.result;
-    resultBox.style.display = 'block';
-  } catch (err) {
-    alert("오류: " + err.message);
-  } finally {
-    loading.style.display = 'none';
-    replyBtn.disabled = false;
-    complaintBtn.disabled = false;
-  }
-}
-<script>
-function copyResult() {
-  const text = document.getElementById('resultText').innerText;
-  navigator.clipboard.writeText(text);
-  alert("클립보드에 복사되었습니다. 배민 사장님 사이트에 그대로 붙여넣으세요!");
-}
-
-async function requestAI(mode) {
-  const store = document.getElementById('storeInfo').value.trim();
-  const review = document.getElementById('reviewInput').value.trim();
-
-  if (!review) {
-    alert("리뷰 내용을 입력해 주세요.");
-    return;
-  }
-
-  const loading = document.getElementById('loadingSpinner');
-  const resultBox = document.getElementById('resultContainer');
-  const resultText = document.getElementById('resultText');
-  const resultHeader = document.getElementById('resultHeader');
-  const replyBtn = document.getElementById('replyBtn');
-  const complaintBtn = document.getElementById('complaintBtn');
-
-  loading.style.display = 'block';
-  resultBox.style.display = 'none';
-  replyBtn.disabled = true;
-  complaintBtn.disabled = true;
-
-  try {
-    const res = await fetch('/api/generate', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ mode, store, review })
-    });
-
-    const textData = await res.text();
-    let data;
-    try {
-      data = JSON.parse(textData);
-    } catch (e) {
-      throw new Error("서버 응답 오류 (HTML): " + textData.slice(0, 100));
-    }
 
     if (!res.ok) {
-      throw new Error(data.message || "서버 통신 실패");
+      throw new Error(data.message || ("서버 응답 에러 (코드: " + res.status + ")"));
     }
 
     if (mode === 'reply') {
@@ -172,7 +107,7 @@ async function requestAI(mode) {
     resultText.innerText = data.result;
     resultBox.style.display = 'block';
   } catch (err) {
-    alert("오류 발생: " + err.message);
+    alert("오류 안내:\n" + err.message);
   } finally {
     loading.style.display = 'none';
     replyBtn.disabled = false;
